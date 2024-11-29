@@ -47,7 +47,7 @@ class DriveDetailsPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             DetailItem(
-              title: drive.description ?? 'No description available',
+              title: drive.destination ?? 'No description available',
               subtitle: 'Description',
             ),
             const SizedBox(height: 10),

@@ -85,7 +85,7 @@ class DriverDetailsPage extends StatelessWidget {
 
   Future<Map<String, dynamic>> fetchDriverDetails(int driverId) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8080/api/v1/users/$driverId'),
+      Uri.parse('http://localhost:8080/api/v1/user/$driverId'),
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

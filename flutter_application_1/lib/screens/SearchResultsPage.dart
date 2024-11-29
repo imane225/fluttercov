@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/DriveModel.dart';
-import '../services/ApiService.dart';
-import 'DriveDetailsPage.dart';
+import '../services/ApiService.dart'; // Import ApiService
 
 class SearchResultsPage extends StatefulWidget {
   final String startLocation;
@@ -24,6 +23,7 @@ class SearchResultsPage extends StatefulWidget {
 class _SearchResultsPageState extends State<SearchResultsPage> {
   final ApiService _apiService = ApiService();
   List<Drive> _drives = [];
+  List<Drive> _filteredDrives = [];
   bool _isLoading = true;
 
   @override
@@ -32,24 +32,18 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     _fetchDrives();
   }
 
+  // Fetch all drives and filter on the frontend
   Future<void> _fetchDrives() async {
     try {
-      print(
-          "Fetching drives for: ${widget.startLocation} -> ${widget.endLocation}");
-      List<dynamic> drives = await _apiService.searchDrives(
-        widget.startLocation,
-        widget.endLocation,
-        widget.date,
-        widget.seats,
-      );
+      // Replace with your actual fetch method
+      List<dynamic> drives = await _apiService.fetchAllDrives();
 
       setState(() {
         _drives = drives.map((drive) => Drive.fromJson(drive)).toList();
-        print("Drives received in Flutter: $_drives");
+        _filteredDrives = List.from(_drives);
         _isLoading = false;
       });
     } catch (error) {
-      print('Error fetching drives: $error');
       setState(() {
         _isLoading = false;
       });
@@ -63,15 +57,41 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     }
   }
 
+  // Filter drives based on user input
+  void _filterDrives() {
+    setState(() {
+      _filteredDrives = _drives.where((drive) {
+        final pickupMatches = drive.pickup
+            .toLowerCase()
+            .contains(widget.startLocation.toLowerCase());
+        final destinationMatches = drive.destination
+            .toLowerCase()
+            .contains(widget.endLocation.toLowerCase());
+        final dateMatches =
+            drive.deptime.isAfter(widget.date.subtract(Duration(days: 1))) &&
+                drive.deptime.isBefore(widget.date.add(Duration(days: 1)));
+        final seatsMatches = drive.seating >= widget.seats;
+
+        return pickupMatches &&
+            destinationMatches &&
+            dateMatches &&
+            seatsMatches;
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Filter the list after fetching the drives
+    _filterDrives();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Résultats'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _drives.isEmpty
+          : _filteredDrives.isEmpty
               ? const Center(
                   child: Text(
                     'Aucun trajet trouvé pour cette recherche.',
@@ -79,9 +99,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                   ),
                 )
               : ListView.builder(
-                  itemCount: _drives.length,
+                  itemCount: _filteredDrives.length,
                   itemBuilder: (context, index) {
-                    final drive = _drives[index];
+                    final drive = _filteredDrives[index];
                     return Card(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
@@ -93,7 +113,6 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Trajet Details
                           ListTile(
                             title: Text(
                               '${drive.pickup} -> ${drive.destination}',
@@ -110,28 +129,17 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                               ),
                             ),
                             onTap: () {
-                              // Navigation vers la page des détails
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      DriveDetailsPage(drive: drive),
-                                ),
-                              );
+                              // Navigate to the drive details page
                             },
                           ),
                           const Divider(),
-                          // Bouton Réserver
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Align(
                               alignment: Alignment.centerRight,
                               child: ElevatedButton(
                                 onPressed: () {
-                                  // Navigation vers la page de paiement (à implémenter)
-                                  print(
-                                      'Navigation vers la page de paiement pour le trajet: ${drive.pickup} -> ${drive.destination}');
-                                  // Navigator.push(...); // Page de paiement à implémenter
+                                  // Navigate to the reservation page
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue,
@@ -144,9 +152,8 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                                 child: const Text(
                                   'Réserver',
                                   style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
