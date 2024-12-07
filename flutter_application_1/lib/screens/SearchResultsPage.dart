@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/DriveModel.dart';
-import '../services/ApiService.dart'; // Import ApiService
+import '../services/ApiService.dart';
+import 'DriveDetailsPage.dart'; // Import de la page des détails
+import 'ReservationConfirmationPage.dart'; // Import de la page de confirmation
 
 class SearchResultsPage extends StatefulWidget {
   final String startLocation;
@@ -32,12 +34,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     _fetchDrives();
   }
 
-  // Fetch all drives and filter on the frontend
   Future<void> _fetchDrives() async {
     try {
-      // Replace with your actual fetch method
       List<dynamic> drives = await _apiService.fetchAllDrives();
-
       setState(() {
         _drives = drives.map((drive) => Drive.fromJson(drive)).toList();
         _filteredDrives = List.from(_drives);
@@ -57,7 +56,6 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     }
   }
 
-  // Filter drives based on user input
   void _filterDrives() {
     setState(() {
       _filteredDrives = _drives.where((drive) {
@@ -82,7 +80,6 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Filter the list after fetching the drives
     _filterDrives();
 
     return Scaffold(
@@ -129,7 +126,15 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                               ),
                             ),
                             onTap: () {
-                              // Navigate to the drive details page
+                              // Naviguer vers DriveDetailsPage avec l'objet drive
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DriveDetailsPage(
+                                    drive: drive,
+                                  ),
+                                ),
+                              );
                             },
                           ),
                           const Divider(),
@@ -139,7 +144,16 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                               alignment: Alignment.centerRight,
                               child: ElevatedButton(
                                 onPressed: () {
-                                  // Navigate to the reservation page
+                                  // Naviguer vers ReservationConfirmationPage
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ReservationConfirmationPage(
+                                        drive: drive, // Passer l'objet drive
+                                      ),
+                                    ),
+                                  );
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue,

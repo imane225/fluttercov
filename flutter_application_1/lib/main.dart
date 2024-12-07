@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/HomePage.dart';
+import 'package:flutter_application_1/services/reservation_service.dart';
+import 'package:flutter_application_1/screens/reservation_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -14,7 +15,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue, // Palette de couleurs principale
       ),
-      home: HomePage(), // Écran d'accueil
+      // Passez l'ID d'un utilisateur qui existe dans votre base de données
+      home: ReservationPage(
+        userId:
+            5, // Remplacez par l'ID d'un utilisateur valide dans votre base de données
+        reservationService:
+            ReservationService(), // Assurez-vous que le service est passé
+      ),
     );
   }
 }

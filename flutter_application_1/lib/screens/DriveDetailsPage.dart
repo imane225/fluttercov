@@ -1,11 +1,40 @@
 import 'package:flutter/material.dart';
 import '../models/DriveModel.dart';
-import 'DriverDetailsPage.dart'; // Import de DriverDetailsPage
+import '../services/ApiService.dart';
 
-class DriveDetailsPage extends StatelessWidget {
+class DriveDetailsPage extends StatefulWidget {
   final Drive drive;
 
   const DriveDetailsPage({Key? key, required this.drive}) : super(key: key);
+
+  @override
+  _DriveDetailsPageState createState() => _DriveDetailsPageState();
+}
+
+class _DriveDetailsPageState extends State<DriveDetailsPage> {
+  String? driverFullName; // Stocker le nom complet du conducteur
+  final ApiService _apiService = ApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDriverDetails();
+  }
+
+  Future<void> _fetchDriverDetails() async {
+    try {
+      final driverDetails =
+          await _apiService.fetchDriverById(widget.drive.user.id);
+      setState(() {
+        driverFullName =
+            '${driverDetails['firstName']} ${driverDetails['name']}';
+      });
+    } catch (e) {
+      setState(() {
+        driverFullName = 'Unknown Driver'; // En cas d'erreur
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,51 +51,38 @@ class DriveDetailsPage extends StatelessWidget {
         child: Column(
           children: [
             DetailItem(
-              title: drive.pickup,
+              title: widget.drive.pickup,
               subtitle: 'Departure City',
             ),
             const SizedBox(height: 10),
             DetailItem(
-              title: drive.destination,
+              title: widget.drive.destination,
               subtitle: 'Arrival City',
             ),
             const SizedBox(height: 10),
             DetailItem(
-              title: drive.deptime.toLocal().toString(),
+              title: widget.drive.deptime.toLocal().toString(),
               subtitle: 'Date & Time',
             ),
             const SizedBox(height: 10),
             DetailItem(
-              title: '${drive.seating}',
+              title: '${widget.drive.seating}',
               subtitle: 'Seats',
             ),
             const SizedBox(height: 10),
             DetailItem(
-              title: '${drive.price.toStringAsFixed(2)} MAD',
+              title: '${widget.drive.price.toStringAsFixed(2)} MAD',
               subtitle: 'Price',
             ),
             const SizedBox(height: 10),
             DetailItem(
-              title: drive.destination ?? 'No description available',
+              title: widget.drive.description,
               subtitle: 'Description',
             ),
             const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () {
-                // Navigation vers DriverDetailsPage
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        DriverDetailsPage(driverId: drive.driverId),
-                  ),
-                );
-              },
-              child: DetailItem(
-                title: drive.driverName ?? 'Unknown Driver',
-                subtitle: 'Driver Name',
-                isClickable: true,
-              ),
+            DetailItem(
+              title: driverFullName ?? 'Loading...',
+              subtitle: 'Driver Name',
             ),
           ],
         ),
@@ -78,13 +94,11 @@ class DriveDetailsPage extends StatelessWidget {
 class DetailItem extends StatelessWidget {
   final String title;
   final String subtitle;
-  final bool isClickable;
 
   const DetailItem({
     Key? key,
     required this.title,
     required this.subtitle,
-    this.isClickable = false,
   }) : super(key: key);
 
   @override
@@ -110,21 +124,6 @@ class DetailItem extends StatelessWidget {
           subtitle,
           style: TextStyle(color: Colors.grey[600]),
         ),
-        trailing: isClickable
-            ? const Icon(Icons.arrow_forward_ios, color: Colors.grey)
-            : null,
-        onTap: isClickable
-            ? () {
-                // Action pour les éléments cliquables
-                if (subtitle == 'Driver Name') {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Navigating to Driver Details...'),
-                    ),
-                  );
-                }
-              }
-            : null,
       ),
     );
   }
